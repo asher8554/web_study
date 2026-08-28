@@ -8,47 +8,73 @@
 }
 
 :root {
-  --background: #f5f5f5;
-  --foreground: #333;
-  --card-bg: #fff;
-  --border: #e5e5e5;
-  --sidebar-bg: #fff;
-  --header-bg: #fff;
-  --text-primary: #333;
-  --text-secondary: #666;
-  --text-muted: #999;
-  --accent: #000;
-  --accent-light: #f0f0f0;
-  --hover: #fafafa;
+  --background: #e8eaf0;
+  --foreground: #1a1a2e;
+  --glass-bg: rgba(255, 255, 255, 0.45);
+  --glass-bg-strong: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.35);
+  --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.12);
+  --glass-blur: 16px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #1a1a1a;
+    --background: #0f0f23;
     --foreground: #e0e0e0;
-    --card-bg: #262626;
-    --border: #3a3a3a;
-    --sidebar-bg: #222;
-    --header-bg: #222;
-    --text-primary: #e0e0e0;
-    --text-secondary: #aaa;
-    --text-muted: #777;
-    --accent: #fff;
-    --accent-light: #333;
-    --hover: #2a2a2a;
+    --glass-bg: rgba(20, 20, 45, 0.55);
+    --glass-bg-strong: rgba(25, 25, 55, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    --glass-blur: 20px;
   }
 }
 
+* {
+  box-sizing: border-box;
+}
+
 body {
+  min-height: 100vh;
   background: var(--background);
+  background-image:
+    radial-gradient(ellipse at 15% 10%, rgba(99, 102, 241, 0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 85%, rgba(168, 85, 247, 0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 50%, rgba(236, 72, 153, 0.08) 0%, transparent 60%);
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-pretendard);
   -webkit-font-smoothing: antialiased;
 }
 
-/* Tistory-style scrollbar */
+/* ===== Glass Panels ===== */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-strong {
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-card {
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 12px;
+}
+
+/* ===== Scrollbar ===== */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -56,93 +82,214 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 4px;
+  background: rgba(128, 128, 128, 0.25);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: rgba(128, 128, 128, 0.45);
 }
 
-/* Tag styles - Tistory minimal */
+/* ===== Tags ===== */
 .tag {
   display: inline-flex;
   align-items: center;
-  padding: 4px 12px;
-  border-radius: 2px;
+  padding: 3px 10px;
+  border-radius: 20px;
   font-size: 12px;
   font-weight: 500;
-  background: var(--accent-light);
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
-  transition: all 0.15s;
+  background: rgba(99, 102, 241, 0.12);
+  color: #6366f1;
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .tag:hover {
-  background: var(--accent);
-  color: var(--card-bg);
-  border-color: var(--accent);
+  background: rgba(99, 102, 241, 0.22);
+  border-color: rgba(99, 102, 241, 0.35);
 }
 
 .tag-active {
-  background: var(--accent) !important;
-  color: var(--card-bg) !important;
-  border-color: var(--accent) !important;
+  background: rgba(99, 102, 241, 0.3) !important;
+  border-color: rgba(99, 102, 241, 0.5) !important;
 }
 
-/* Difficulty badges - Tistory clean */
+@media (prefers-color-scheme: dark) {
+  .tag {
+    background: rgba(99, 102, 241, 0.2);
+    color: #818cf8;
+    border-color: rgba(99, 102, 241, 0.25);
+  }
+  .tag:hover {
+    background: rgba(99, 102, 241, 0.3);
+  }
+  .tag-active {
+    background: rgba(99, 102, 241, 0.4) !important;
+    border-color: rgba(99, 102, 241, 0.6) !important;
+  }
+}
+
+/* ===== Badges ===== */
 .badge {
   display: inline-flex;
   align-items: center;
   padding: 2px 8px;
-  border-radius: 2px;
+  border-radius: 20px;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .badge-beginner {
-  background: #e8f5e9;
-  color: #2e7d32;
+  background: rgba(34, 197, 94, 0.15);
+  color: #16a34a;
+  border: 1px solid rgba(34, 197, 94, 0.2);
 }
 
 .badge-intermediate {
-  background: #fff3e0;
-  color: #e65100;
+  background: rgba(234, 179, 8, 0.15);
+  color: #ca8a04;
+  border: 1px solid rgba(234, 179, 8, 0.2);
 }
 
 .badge-advanced {
-  background: #fce4ec;
-  color: #c62828;
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 @media (prefers-color-scheme: dark) {
   .badge-beginner {
-    background: #1b5e20;
-    color: #a5d6a7;
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+    border-color: rgba(34, 197, 94, 0.3);
   }
   .badge-intermediate {
-    background: #bf360c;
-    color: #ffcc80;
+    background: rgba(234, 179, 8, 0.2);
+    color: #facc15;
+    border-color: rgba(234, 179, 8, 0.3);
   }
   .badge-advanced {
-    background: #b71c1c;
-    color: #ef9a9a;
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.3);
   }
 }
 
-/* Card hover */
+/* ===== Buttons ===== */
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--foreground);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-ghost:hover {
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ===== Inputs ===== */
+.input-glass {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px;
+  font-size: 14px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  outline: none;
+  color: var(--foreground);
+  transition: border-color 0.2s;
+}
+
+.input-glass::placeholder {
+  color: rgba(128, 128, 128, 0.6);
+}
+
+.input-glass:focus {
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.select-glass {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px;
+  font-size: 14px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  outline: none;
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+/* ===== Card hover ===== */
 .card-hover {
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
 }
 
 .card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
 
 @media (prefers-color-scheme: dark) {
   .card-hover:hover {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
   }
+}
+
+/* ===== CodeMirror override ===== */
+.cm-editor {
+  background: transparent !important;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.cm-editor .cm-gutters {
+  background: transparent !important;
+  border: none !important;
+}
+
+.cm-editor .cm-content {
+  font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, monospace;
+}
+
+.cm-editor .cm-activeLine {
+  background: rgba(99, 102, 241, 0.06) !important;
+}
+
+.cm-editor .cm-activeLineGutter {
+  background: transparent !important;
 }

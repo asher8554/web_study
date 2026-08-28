@@ -73,7 +73,7 @@ export default function Home() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `knowledge-log-backup-${new Date().toISOString().split("T")[0]}.json`;
+    a.download = `knowledge-log-${new Date().toISOString().split("T")[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -90,9 +90,9 @@ export default function Home() {
         const json = event.target?.result as string;
         if (importFromJSON(json)) {
           setItems(getAllItems());
-          alert("복원이 완료되었습니다");
+          alert("복원 완료");
         } else {
-          alert("복원에 실패했습니다");
+          alert("복원 실패");
         }
       };
       reader.readAsText(file);
@@ -103,10 +103,10 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-[var(--header-bg)] border-b border-[var(--border)]">
-        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-4">
+      <header className="sticky top-0 z-40 glass-strong">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-4">
           <h1
-            className="text-lg font-bold tracking-tight cursor-pointer"
+            className="text-xl font-bold tracking-tight cursor-pointer bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent"
             onClick={() => { setShowDetail(null); setSelectedTag(null); setSearchQuery(""); }}
           >
             Knowledge Log
@@ -119,18 +119,15 @@ export default function Home() {
                 placeholder="검색어를 입력하세요"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-9 pl-9 pr-4 text-sm bg-[var(--accent-light)] border border-[var(--border)] rounded-sm focus:outline-none focus:border-[var(--text-muted)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+                className="input-glass pl-10"
               />
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground)] opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
           </div>
 
-          <button
-            onClick={handleCreate}
-            className="h-9 px-4 text-sm font-medium bg-[var(--accent)] text-[var(--card-bg)] rounded-sm hover:opacity-90 transition-opacity"
-          >
+          <button onClick={handleCreate} className="btn-primary">
             글쓰기
           </button>
         </div>
@@ -138,22 +135,22 @@ export default function Home() {
 
       <div className="flex-1 max-w-6xl mx-auto w-full flex">
         {/* Sidebar */}
-        <aside className="w-60 shrink-0 border-r border-[var(--border)] bg-[var(--sidebar-bg)] p-5 hidden md:block">
-          <div className="space-y-6">
+        <aside className="w-60 shrink-0 p-5 hidden md:block">
+          <div className="glass-card p-5 space-y-6 sticky top-24">
             {/* Stats */}
             <div>
-              <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">
+              <h3 className="text-xs font-semibold text-[var(--foreground)] opacity-40 uppercase tracking-wider mb-3">
                 통계
               </h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-[var(--text-secondary)]">전체 항목</span>
-                  <span className="font-medium text-[var(--text-primary)]">{items.length}</span>
+                  <span className="opacity-60">전체 항목</span>
+                  <span className="font-semibold">{items.length}</span>
                 </div>
                 {selectedTag && (
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">검색 결과</span>
-                    <span className="font-medium text-[var(--text-primary)]">{filteredItems.length}</span>
+                    <span className="opacity-60">검색 결과</span>
+                    <span className="font-semibold">{filteredItems.length}</span>
                   </div>
                 )}
               </div>
@@ -161,7 +158,7 @@ export default function Home() {
 
             {/* Tags */}
             <div>
-              <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">
+              <h3 className="text-xs font-semibold text-[var(--foreground)] opacity-40 uppercase tracking-wider mb-3">
                 태그
               </h3>
               {tags.length > 0 ? (
@@ -177,26 +174,20 @@ export default function Home() {
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-[var(--text-muted)]">태그 없음</p>
+                <p className="text-xs opacity-40">태그 없음</p>
               )}
             </div>
 
-            {/* Backup/Restore */}
+            {/* Backup / Restore */}
             <div>
-              <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">
+              <h3 className="text-xs font-semibold text-[var(--foreground)] opacity-40 uppercase tracking-wider mb-3">
                 데이터
               </h3>
               <div className="flex gap-2">
-                <button
-                  onClick={handleBackup}
-                  className="flex-1 h-8 text-xs border border-[var(--border)] rounded-sm hover:bg-[var(--accent-light)] transition-colors"
-                >
+                <button onClick={handleBackup} className="btn-ghost text-xs flex-1">
                   백업
                 </button>
-                <button
-                  onClick={handleRestore}
-                  className="flex-1 h-8 text-xs border border-[var(--border)] rounded-sm hover:bg-[var(--accent-light)] transition-colors"
-                >
+                <button onClick={handleRestore} className="btn-ghost text-xs flex-1">
                   복원
                 </button>
               </div>
@@ -205,81 +196,72 @@ export default function Home() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0">
+        <main className="flex-1 min-w-0 p-6">
           {showDetail ? (
-            /* Detail View */
             <DetailPage
               item={showDetail}
               onBack={() => setShowDetail(null)}
               onEdit={() => handleEdit(showDetail)}
               onDelete={() => handleDelete(showDetail.id)}
             />
-          ) : (
-            /* List View */
-            <div className="p-6">
-              {filteredItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-24 text-center">
-                  <p className="text-[var(--text-muted)] mb-4">
-                    {searchQuery || selectedTag
-                      ? "검색 결과가 없습니다"
-                      : "작성된 글이 없습니다"}
-                  </p>
-                  {!searchQuery && !selectedTag && (
-                    <button
-                      onClick={handleCreate}
-                      className="h-10 px-6 text-sm font-medium bg-[var(--accent)] text-[var(--card-bg)] rounded-sm hover:opacity-90"
-                    >
-                      첫 글쓰기
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <Virtuoso
-                  className="h-[calc(100vh-8rem)]"
-                  totalCount={filteredItems.length}
-                  itemContent={(index) => {
-                    const item = filteredItems[index];
-                    return (
-                      <article
-                        className="py-6 border-b border-[var(--border)] cursor-pointer card-hover"
-                        onClick={() => setShowDetail(item)}
-                      >
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className={`badge badge-${item.difficulty}`}>
-                            {getDifficultyLabel(item.difficulty)}
-                          </span>
-                          <span className="text-xs text-[var(--text-muted)]">
-                            {new Date(item.createdAt).toLocaleDateString("ko-KR")}
-                          </span>
-                        </div>
-                        <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-2 hover:underline">
-                          {item.title}
-                        </h2>
-                        {item.summary && (
-                          <p className="text-sm text-[var(--text-secondary)] line-clamp-2 mb-3">
-                            {item.summary}
-                          </p>
-                        )}
-                        <div className="flex flex-wrap gap-1.5">
-                          {item.tags.map((tag) => (
-                            <span
-                              key={tag}
-                              className="tag"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedTag(tag);
-                              }}
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </article>
-                    );
-                  }}
-                />
+          ) : filteredItems.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <p className="opacity-40 mb-4">
+                {searchQuery || selectedTag
+                  ? "검색 결과가 없습니다"
+                  : "작성된 글이 없습니다"}
+              </p>
+              {!searchQuery && !selectedTag && (
+                <button onClick={handleCreate} className="btn-primary">
+                  첫 글쓰기
+                </button>
               )}
             </div>
+          ) : (
+            <Virtuoso
+              className="h-[calc(100vh-10rem)]"
+              totalCount={filteredItems.length}
+              itemContent={(index) => {
+                const item = filteredItems[index];
+                return (
+                  <article
+                    className="glass-card p-5 mb-3 cursor-pointer card-hover"
+                    onClick={() => setShowDetail(item)}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`badge badge-${item.difficulty}`}>
+                        {getDifficultyLabel(item.difficulty)}
+                      </span>
+                      <span className="text-xs opacity-40">
+                        {new Date(item.createdAt).toLocaleDateString("ko-KR")}
+                      </span>
+                    </div>
+                    <h2 className="text-lg font-semibold mb-2 hover:text-indigo-500 transition-colors">
+                      {item.title}
+                    </h2>
+                    {item.summary && (
+                      <p className="text-sm opacity-60 line-clamp-2 mb-3">
+                        {item.summary}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-1.5">
+                      {item.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="tag"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedTag(tag);
+                          }}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </article>
+                );
+              }}
+            />
           )}
         </main>
       </div>
@@ -299,7 +281,7 @@ export default function Home() {
   );
 }
 
-/* Detail Page Component */
+/* ===== Detail Page ===== */
 function DetailPage({
   item,
   onBack,
@@ -320,11 +302,10 @@ function DetailPage({
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
-      {/* Back button */}
+    <div className="max-w-3xl mx-auto">
       <button
         onClick={onBack}
-        className="flex items-center gap-1 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] mb-6"
+        className="flex items-center gap-1 text-sm opacity-50 hover:opacity-100 transition-opacity mb-6"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -332,13 +313,12 @@ function DetailPage({
         목록으로
       </button>
 
-      {/* Article header */}
-      <header className="mb-8 pb-6 border-b border-[var(--border)]">
+      <header className="glass-card p-6 mb-4">
         <div className="flex items-center gap-2 mb-3">
           <span className={`badge badge-${item.difficulty}`}>
             {getDifficultyLabel(item.difficulty)}
           </span>
-          <span className="text-sm text-[var(--text-muted)]">
+          <span className="text-sm opacity-40">
             {new Date(item.createdAt).toLocaleDateString("ko-KR", {
               year: "numeric",
               month: "long",
@@ -346,18 +326,12 @@ function DetailPage({
             })}
           </span>
         </div>
-        <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-3">
-          {item.title}
-        </h1>
+        <h1 className="text-2xl font-bold mb-3">{item.title}</h1>
         {item.summary && (
-          <p className="text-[var(--text-secondary)] leading-relaxed">
-            {item.summary}
-          </p>
+          <p className="opacity-60 leading-relaxed mb-3">{item.summary}</p>
         )}
         {item.source && (
-          <p className="text-sm text-[var(--text-muted)] mt-2">
-            출처: {item.source}
-          </p>
+          <p className="text-sm opacity-40">출처: {item.source}</p>
         )}
         <div className="flex flex-wrap gap-1.5 mt-4">
           {item.tags.map((tag) => (
@@ -366,22 +340,17 @@ function DetailPage({
         </div>
       </header>
 
-      {/* Article content */}
-      <div className="mb-8">
+      <div className="glass-card p-6 mb-4">
         <MarkdownPreview content={item.content} />
       </div>
 
-      {/* Actions */}
-      <div className="flex justify-end gap-2 pt-6 border-t border-[var(--border)]">
-        <button
-          onClick={onEdit}
-          className="h-9 px-4 text-sm border border-[var(--border)] rounded-sm hover:bg-[var(--accent-light)] transition-colors"
-        >
+      <div className="flex justify-end gap-2">
+        <button onClick={onEdit} className="btn-ghost text-sm">
           수정
         </button>
         <button
           onClick={onDelete}
-          className="h-9 px-4 text-sm border border-red-300 text-red-600 rounded-sm hover:bg-red-50 transition-colors"
+          className="h-10 px-5 text-sm font-medium rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 transition-colors"
         >
           삭제
         </button>
@@ -390,7 +359,7 @@ function DetailPage({
   );
 }
 
-/* Editor Modal Component */
+/* ===== Editor Modal ===== */
 function EditorModal({
   item,
   onClose,
@@ -434,18 +403,17 @@ function EditorModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-20 overflow-y-auto">
-      <div className="w-full max-w-4xl bg-[var(--card-bg)] border border-[var(--border)] rounded-sm mb-20">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 overflow-y-auto"
+      style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }}
+    >
+      <div className="w-full max-w-4xl glass-strong rounded-2xl mb-20">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]">
-          <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--glass-border)]">
+          <h2 className="text-lg font-semibold">
             {item ? "글 수정" : "새 글쓰기"}
           </h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-[var(--accent-light)] rounded transition-colors"
-          >
-            <svg className="w-5 h-5 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-[var(--glass-bg)] transition-colors">
+            <svg className="w-5 h-5 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -458,7 +426,7 @@ function EditorModal({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="제목을 입력하세요"
-            className="w-full text-2xl font-bold bg-transparent border-none outline-none text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+            className="w-full text-2xl font-bold bg-transparent border-none outline-none placeholder:opacity-30"
           />
 
           <input
@@ -466,12 +434,12 @@ function EditorModal({
             value={summary}
             onChange={(e) => setSummary(e.target.value)}
             placeholder="요약을 입력하세요 (선택)"
-            className="w-full text-sm bg-transparent border-none outline-none text-[var(--text-secondary)] placeholder:text-[var(--text-muted)]"
+            className="w-full text-sm bg-transparent border-none outline-none opacity-60 placeholder:opacity-30"
           />
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5 uppercase tracking-wider">
+              <label className="block text-xs font-semibold opacity-40 uppercase tracking-wider mb-1.5">
                 출처
               </label>
               <input
@@ -479,17 +447,17 @@ function EditorModal({
                 value={source}
                 onChange={(e) => setSource(e.target.value)}
                 placeholder="URL, 책 제목 등"
-                className="w-full h-9 px-3 text-sm bg-[var(--accent-light)] border border-[var(--border)] rounded-sm outline-none focus:border-[var(--text-muted)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+                className="input-glass"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5 uppercase tracking-wider">
+              <label className="block text-xs font-semibold opacity-40 uppercase tracking-wider mb-1.5">
                 난이도
               </label>
               <select
                 value={difficulty}
                 onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-                className="w-full h-9 px-3 text-sm bg-[var(--accent-light)] border border-[var(--border)] rounded-sm outline-none text-[var(--text-primary)]"
+                className="select-glass"
               >
                 <option value="beginner">초급</option>
                 <option value="intermediate">중급</option>
@@ -503,29 +471,31 @@ function EditorModal({
             value={tagsInput}
             onChange={(e) => setTagsInput(e.target.value)}
             placeholder="태그를 쉼표로 구분하여 입력하세요"
-            className="w-full h-9 px-3 text-sm bg-[var(--accent-light)] border border-[var(--border)] rounded-sm outline-none focus:border-[var(--text-muted)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+            className="input-glass"
           />
 
           <div>
-            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5 uppercase tracking-wider">
+            <label className="block text-xs font-semibold opacity-40 uppercase tracking-wider mb-1.5">
               본문
             </label>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <p className="text-[10px] text-[var(--text-muted)] mb-1 uppercase">Editor</p>
-                <MarkdownEditor
-                  value={content}
-                  onChange={setContent}
-                  placeholder="마크다운으로 작성하세요"
-                />
+                <p className="text-[10px] opacity-30 mb-1 uppercase">Editor</p>
+                <div className="glass-card p-1 overflow-hidden">
+                  <MarkdownEditor
+                    value={content}
+                    onChange={setContent}
+                    placeholder="마크다운으로 작성하세요"
+                  />
+                </div>
               </div>
               <div>
-                <p className="text-[10px] text-[var(--text-muted)] mb-1 uppercase">Preview</p>
-                <div className="rounded-sm border border-[var(--border)] p-4 min-h-[300px] max-h-[500px] overflow-y-auto bg-[var(--accent-light)]">
+                <p className="text-[10px] opacity-30 mb-1 uppercase">Preview</p>
+                <div className="glass-card p-4 min-h-[300px] max-h-[500px] overflow-y-auto">
                   {content ? (
                     <MarkdownPreview content={content} />
                   ) : (
-                    <p className="text-sm text-[var(--text-muted)]">미리보기</p>
+                    <p className="text-sm opacity-30">미리보기</p>
                   )}
                 </div>
               </div>
@@ -534,17 +504,11 @@ function EditorModal({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2 px-6 py-4 border-t border-[var(--border)]">
-          <button
-            onClick={onClose}
-            className="h-9 px-5 text-sm border border-[var(--border)] rounded-sm hover:bg-[var(--accent-light)] transition-colors"
-          >
+        <div className="flex justify-end gap-2 px-6 py-4 border-t border-[var(--glass-border)]">
+          <button onClick={onClose} className="btn-ghost">
             취소
           </button>
-          <button
-            onClick={handleSave}
-            className="h-9 px-5 text-sm font-medium bg-[var(--accent)] text-[var(--card-bg)] rounded-sm hover:opacity-90 transition-opacity"
-          >
+          <button onClick={handleSave} className="btn-primary">
             {item ? "수정" : "발행"}
           </button>
         </div>
