@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ko" className="h-full antialiased" suppressHydrationWarning>
+    <html lang="ko" className="h-full" suppressHydrationWarning>
       <head>
         <link
           rel="stylesheet"
@@ -17,11 +17,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
-          integrity="sha384-nB0miv6/jRmo5YCBER1viS0U2l7EoVxU2VHIVOKJLO3R5I/LOp6hKJfGQ5KfVGP"
+          integrity="sha384-nB0miv6/jRmo5YCBER1viS0U2l7EoVxU2VHIVOKJLO3R5I/LOp6hKfJGQ5KfVGP"
           crossOrigin="anonymous"
         />
       </head>
-      <body className="min-h-full flex flex-col font-pretendard">{children}</body>
+      <body className="h-full antialiased">{children}</body>
     </html>
   );
 }

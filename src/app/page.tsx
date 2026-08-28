@@ -21,6 +21,7 @@ export default function Home() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [editingItem, setEditingItem] = useState<KnowledgeItem | null>(null);
+  const [showDetail, setShowDetail] = useState<KnowledgeItem | null>(null);
 
   useEffect(() => {
     setItems(getAllItems());
@@ -38,6 +39,33 @@ export default function Home() {
     }
     return result;
   }, [items, searchQuery, selectedTag]);
+
+  const handleDelete = (id: string) => {
+    if (confirm("이 지식을 삭제하시겠습니까?")) {
+      deleteItem(id);
+      setItems(getAllItems());
+      setShowDetail(null);
+    }
+  };
+
+  const handleCreate = () => {
+    setEditingItem(null);
+    setShowEditor(true);
+  };
+
+  const handleEdit = (item: KnowledgeItem) => {
+    setEditingItem(item);
+    setShowDetail(null);
+    setShowEditor(true);
+  };
+
+  const getDifficultyLabel = (d: Difficulty) => {
+    switch (d) {
+      case "beginner": return "초급";
+      case "intermediate": return "중급";
+      case "advanced": return "고급";
+    }
+  };
 
   const handleBackup = () => {
     const json = exportToJSON();
@@ -57,7 +85,6 @@ export default function Home() {
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = (event) => {
         const json = event.target?.result as string;
@@ -65,7 +92,7 @@ export default function Home() {
           setItems(getAllItems());
           alert("복원이 완료되었습니다");
         } else {
-          alert("복원에 실패했습니다. 파일을 확인해주세요");
+          alert("복원에 실패했습니다");
         }
       };
       reader.readAsText(file);
@@ -73,262 +100,189 @@ export default function Home() {
     input.click();
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("이 지식을 삭제하시겠습니까?")) {
-      deleteItem(id);
-      setItems(getAllItems());
-    }
-  };
-
-  const handleCreate = () => {
-    setEditingItem(null);
-    setShowEditor(true);
-  };
-
-  const handleEdit = (item: KnowledgeItem) => {
-    setEditingItem(item);
-    setShowEditor(true);
-  };
-
-  const getDifficultyLabel = (d: Difficulty) => {
-    switch (d) {
-      case "beginner":
-        return "초급";
-      case "intermediate":
-        return "중급";
-      case "advanced":
-        return "고급";
-    }
-  };
-
-  const getDifficultyClass = (d: Difficulty) => {
-    switch (d) {
-      case "beginner":
-        return "badge-beginner";
-      case "intermediate":
-        return "badge-intermediate";
-      case "advanced":
-        return "badge-advanced";
-    }
-  };
-
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-64 glass-sidebar flex flex-col">
-        <div className="p-6">
-          <h1 className="text-xl font-bold text-foreground">Knowledge Log</h1>
-          <p className="text-sm text-foreground/60 mt-1">지식 정리 웹페이지</p>
-        </div>
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-[var(--header-bg)] border-b border-[var(--border)]">
+        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-4">
+          <h1
+            className="text-lg font-bold tracking-tight cursor-pointer"
+            onClick={() => { setShowDetail(null); setSelectedTag(null); setSearchQuery(""); }}
+          >
+            Knowledge Log
+          </h1>
 
-        {/* Tags */}
-        <div className="flex-1 overflow-y-auto px-4 pb-4">
-          <h2 className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-3">
-            태그 ({tags.length})
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {tags.map((tag) => (
-              <button
-                key={tag}
-                onClick={() =>
-                  setSelectedTag(selectedTag === tag ? null : tag)
-                }
-                className={`tag cursor-pointer transition-all ${
-                  selectedTag === tag
-                    ? "ring-2 ring-indigo-500 ring-offset-1"
-                    : ""
-                }`}
-              >
-                {tag}
-              </button>
-            ))}
-            {tags.length === 0 && (
-              <p className="text-xs text-foreground/40">아직 태그가 없습니다</p>
-            )}
-          </div>
-        </div>
-
-        {/* Stats & Backup */}
-        <div className="p-4 border-t border-white/10 space-y-3">
-          <div className="text-sm text-foreground/60 space-y-1">
-            <div className="flex justify-between">
-              <span>전체 항목</span>
-              <span className="font-medium text-foreground">{items.length}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>검색 결과</span>
-              <span className="font-medium text-foreground">
-                {filteredItems.length}
-              </span>
+          <div className="flex-1 max-w-md mx-auto">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="검색어를 입력하세요"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-9 pl-9 pr-4 text-sm bg-[var(--accent-light)] border border-[var(--border)] rounded-sm focus:outline-none focus:border-[var(--text-muted)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+              />
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
             </div>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={handleBackup}
-              className="flex-1 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs text-foreground/70 transition-colors"
-            >
-              백업
-            </button>
-            <button
-              onClick={handleRestore}
-              className="flex-1 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs text-foreground/70 transition-colors"
-            >
-              복원
-            </button>
-          </div>
-        </div>
-      </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="glass-header px-6 py-4 flex items-center gap-4">
-          <div className="flex-1 relative">
-            <input
-              type="text"
-              placeholder="제목, 내용, 태그로 검색..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-white/5 border border-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-foreground placeholder:text-foreground/40"
-            />
-          </div>
           <button
             onClick={handleCreate}
-            className="px-4 py-2 rounded-xl bg-indigo-500 text-white font-medium hover:bg-indigo-600 transition-colors"
+            className="h-9 px-4 text-sm font-medium bg-[var(--accent)] text-[var(--card-bg)] rounded-sm hover:opacity-90 transition-opacity"
           >
-            + 새 지식
+            글쓰기
           </button>
-        </header>
+        </div>
+      </header>
 
-        {/* Content Area */}
-        <div className="flex-1 overflow-hidden">
-          {filteredItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="w-16 h-16 rounded-full bg-indigo-500/10 flex items-center justify-center mb-4">
-                <svg
-                  className="w-8 h-8 text-indigo-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-foreground mb-2">
-                {searchQuery || selectedTag
-                  ? "검색 결과가 없습니다"
-                  : "아직 지식이 없습니다"}
+      <div className="flex-1 max-w-6xl mx-auto w-full flex">
+        {/* Sidebar */}
+        <aside className="w-60 shrink-0 border-r border-[var(--border)] bg-[var(--sidebar-bg)] p-5 hidden md:block">
+          <div className="space-y-6">
+            {/* Stats */}
+            <div>
+              <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">
+                통계
               </h3>
-              <p className="text-foreground/60 mb-4">
-                {searchQuery || selectedTag
-                  ? "다른 검색어나 태그를 시도해보세요"
-                  : "첫 번째 지식을 추가해보세요"}
-              </p>
-              {!searchQuery && !selectedTag && (
-                <button
-                  onClick={handleCreate}
-                  className="px-4 py-2 rounded-xl bg-indigo-500 text-white font-medium hover:bg-indigo-600 transition-colors"
-                >
-                  + 지식 추가하기
-                </button>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-[var(--text-secondary)]">전체 항목</span>
+                  <span className="font-medium text-[var(--text-primary)]">{items.length}</span>
+                </div>
+                {selectedTag && (
+                  <div className="flex justify-between">
+                    <span className="text-[var(--text-secondary)]">검색 결과</span>
+                    <span className="font-medium text-[var(--text-primary)]">{filteredItems.length}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Tags */}
+            <div>
+              <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">
+                태그
+              </h3>
+              {tags.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {tags.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                      className={`tag ${selectedTag === tag ? "tag-active" : ""}`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-[var(--text-muted)]">태그 없음</p>
               )}
             </div>
-          ) : (
-            <Virtuoso
-              className="h-full"
-              totalCount={filteredItems.length}
-              itemContent={(index) => {
-                const item = filteredItems[index];
-                return (
-                  <div className="p-4">
-                    <div className="glass-card p-5 hover:scale-[1.01] transition-transform">
-                      <div className="flex items-start justify-between mb-3">
-                        <h3 className="text-lg font-semibold text-foreground line-clamp-1">
-                          {item.title}
-                        </h3>
-                        <div className="flex gap-1 ml-2">
-                          <button
-                            onClick={() => handleEdit(item)}
-                            className="p-1.5 rounded-lg hover:bg-white/20 text-foreground/60 hover:text-foreground transition-colors"
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                              />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => handleDelete(item.id)}
-                            className="p-1.5 rounded-lg hover:bg-red-500/20 text-foreground/60 hover:text-red-500 transition-colors"
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
 
-                      {item.summary && (
-                        <p className="text-sm text-foreground/70 mb-3 line-clamp-2">
-                          {item.summary}
-                        </p>
-                      )}
+            {/* Backup/Restore */}
+            <div>
+              <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">
+                데이터
+              </h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleBackup}
+                  className="flex-1 h-8 text-xs border border-[var(--border)] rounded-sm hover:bg-[var(--accent-light)] transition-colors"
+                >
+                  백업
+                </button>
+                <button
+                  onClick={handleRestore}
+                  className="flex-1 h-8 text-xs border border-[var(--border)] rounded-sm hover:bg-[var(--accent-light)] transition-colors"
+                >
+                  복원
+                </button>
+              </div>
+            </div>
+          </div>
+        </aside>
 
-                      <div className="flex items-center gap-2 mb-3">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${getDifficultyClass(item.difficulty)}`}
-                        >
-                          {getDifficultyLabel(item.difficulty)}
-                        </span>
-                        {item.source && (
-                          <span className="text-xs text-foreground/50 truncate max-w-[200px]">
-                            {item.source}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex flex-wrap gap-1.5">
-                        {item.tags.map((tag) => (
-                          <span key={tag} className="tag text-xs">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-
-                      <div className="mt-3 text-xs text-foreground/40">
-                        {new Date(item.createdAt).toLocaleDateString("ko-KR")}
-                      </div>
-                    </div>
-                  </div>
-                );
-              }}
+        {/* Main Content */}
+        <main className="flex-1 min-w-0">
+          {showDetail ? (
+            /* Detail View */
+            <DetailPage
+              item={showDetail}
+              onBack={() => setShowDetail(null)}
+              onEdit={() => handleEdit(showDetail)}
+              onDelete={() => handleDelete(showDetail.id)}
             />
+          ) : (
+            /* List View */
+            <div className="p-6">
+              {filteredItems.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-24 text-center">
+                  <p className="text-[var(--text-muted)] mb-4">
+                    {searchQuery || selectedTag
+                      ? "검색 결과가 없습니다"
+                      : "작성된 글이 없습니다"}
+                  </p>
+                  {!searchQuery && !selectedTag && (
+                    <button
+                      onClick={handleCreate}
+                      className="h-10 px-6 text-sm font-medium bg-[var(--accent)] text-[var(--card-bg)] rounded-sm hover:opacity-90"
+                    >
+                      첫 글쓰기
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <Virtuoso
+                  className="h-[calc(100vh-8rem)]"
+                  totalCount={filteredItems.length}
+                  itemContent={(index) => {
+                    const item = filteredItems[index];
+                    return (
+                      <article
+                        className="py-6 border-b border-[var(--border)] cursor-pointer card-hover"
+                        onClick={() => setShowDetail(item)}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`badge badge-${item.difficulty}`}>
+                            {getDifficultyLabel(item.difficulty)}
+                          </span>
+                          <span className="text-xs text-[var(--text-muted)]">
+                            {new Date(item.createdAt).toLocaleDateString("ko-KR")}
+                          </span>
+                        </div>
+                        <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-2 hover:underline">
+                          {item.title}
+                        </h2>
+                        {item.summary && (
+                          <p className="text-sm text-[var(--text-secondary)] line-clamp-2 mb-3">
+                            {item.summary}
+                          </p>
+                        )}
+                        <div className="flex flex-wrap gap-1.5">
+                          {item.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="tag"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedTag(tag);
+                              }}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </article>
+                    );
+                  }}
+                />
+              )}
+            </div>
           )}
-        </div>
-      </main>
+        </main>
+      </div>
 
       {/* Editor Modal */}
       {showEditor && (
@@ -345,7 +299,98 @@ export default function Home() {
   );
 }
 
-// Editor Modal Component
+/* Detail Page Component */
+function DetailPage({
+  item,
+  onBack,
+  onEdit,
+  onDelete,
+}: {
+  item: KnowledgeItem;
+  onBack: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const getDifficultyLabel = (d: Difficulty) => {
+    switch (d) {
+      case "beginner": return "초급";
+      case "intermediate": return "중급";
+      case "advanced": return "고급";
+    }
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto p-6">
+      {/* Back button */}
+      <button
+        onClick={onBack}
+        className="flex items-center gap-1 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] mb-6"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        목록으로
+      </button>
+
+      {/* Article header */}
+      <header className="mb-8 pb-6 border-b border-[var(--border)]">
+        <div className="flex items-center gap-2 mb-3">
+          <span className={`badge badge-${item.difficulty}`}>
+            {getDifficultyLabel(item.difficulty)}
+          </span>
+          <span className="text-sm text-[var(--text-muted)]">
+            {new Date(item.createdAt).toLocaleDateString("ko-KR", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </span>
+        </div>
+        <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-3">
+          {item.title}
+        </h1>
+        {item.summary && (
+          <p className="text-[var(--text-secondary)] leading-relaxed">
+            {item.summary}
+          </p>
+        )}
+        {item.source && (
+          <p className="text-sm text-[var(--text-muted)] mt-2">
+            출처: {item.source}
+          </p>
+        )}
+        <div className="flex flex-wrap gap-1.5 mt-4">
+          {item.tags.map((tag) => (
+            <span key={tag} className="tag">{tag}</span>
+          ))}
+        </div>
+      </header>
+
+      {/* Article content */}
+      <div className="mb-8">
+        <MarkdownPreview content={item.content} />
+      </div>
+
+      {/* Actions */}
+      <div className="flex justify-end gap-2 pt-6 border-t border-[var(--border)]">
+        <button
+          onClick={onEdit}
+          className="h-9 px-4 text-sm border border-[var(--border)] rounded-sm hover:bg-[var(--accent-light)] transition-colors"
+        >
+          수정
+        </button>
+        <button
+          onClick={onDelete}
+          className="h-9 px-4 text-sm border border-red-300 text-red-600 rounded-sm hover:bg-red-50 transition-colors"
+        >
+          삭제
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* Editor Modal Component */
 function EditorModal({
   item,
   onClose,
@@ -376,13 +421,11 @@ function EditorModal({
       .filter(Boolean);
 
     if (item) {
-      // Update existing
       import("@/lib/storage").then(({ updateItem }) => {
         updateItem(item.id, { title, content, summary, source, difficulty, tags });
         onSave();
       });
     } else {
-      // Create new
       import("@/lib/storage").then(({ createItem }) => {
         createItem({ title, content, summary, source, difficulty, tags });
         onSave();
@@ -391,90 +434,44 @@ function EditorModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="glass-card w-full max-w-5xl max-h-[90vh] overflow-y-auto p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-foreground">
-            {item ? "지식 편집" : "새 지식 추가"}
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-20 overflow-y-auto">
+      <div className="w-full max-w-4xl bg-[var(--card-bg)] border border-[var(--border)] rounded-sm mb-20">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+            {item ? "글 수정" : "새 글쓰기"}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-white/20 text-foreground/60 hover:text-foreground transition-colors"
+            className="p-1 hover:bg-[var(--accent-light)] rounded transition-colors"
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
+            <svg className="w-5 h-5 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-foreground/70 mb-1">
-              제목 *
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="지식 제목을 입력하세요"
-              className="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-white/5 border border-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-foreground placeholder:text-foreground/40"
-            />
-          </div>
+        {/* Body */}
+        <div className="p-6 space-y-5">
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="제목을 입력하세요"
+            className="w-full text-2xl font-bold bg-transparent border-none outline-none text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-foreground/70 mb-1">
-              요약
-            </label>
-            <input
-              type="text"
-              value={summary}
-              onChange={(e) => setSummary(e.target.value)}
-              placeholder="간략한 요약을 입력하세요"
-              className="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-white/5 border border-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-foreground placeholder:text-foreground/40"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-foreground/70 mb-1">
-              내용 (마크다운)
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <p className="text-xs text-foreground/50 mb-1">에디터</p>
-                <MarkdownEditor
-                  value={content}
-                  onChange={setContent}
-                  placeholder="마크다운으로 내용을 입력하세요..."
-                />
-              </div>
-              <div>
-                <p className="text-xs text-foreground/50 mb-1">미리보기</p>
-                <div className="rounded-xl border border-white/20 p-4 min-h-[300px] max-h-[500px] overflow-y-auto bg-white/30 dark:bg-white/5">
-                  {content ? (
-                    <MarkdownPreview content={content} />
-                  ) : (
-                    <p className="text-foreground/40 text-sm">
-                      내용을 입력하면 미리보기가 표시됩니다
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+          <input
+            type="text"
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+            placeholder="요약을 입력하세요 (선택)"
+            className="w-full text-sm bg-transparent border-none outline-none text-[var(--text-secondary)] placeholder:text-[var(--text-muted)]"
+          />
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-foreground/70 mb-1">
+              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5 uppercase tracking-wider">
                 출처
               </label>
               <input
@@ -482,18 +479,17 @@ function EditorModal({
                 value={source}
                 onChange={(e) => setSource(e.target.value)}
                 placeholder="URL, 책 제목 등"
-                className="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-white/5 border border-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-foreground placeholder:text-foreground/40"
+                className="w-full h-9 px-3 text-sm bg-[var(--accent-light)] border border-[var(--border)] rounded-sm outline-none focus:border-[var(--text-muted)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-foreground/70 mb-1">
+              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5 uppercase tracking-wider">
                 난이도
               </label>
               <select
                 value={difficulty}
                 onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-                className="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-white/5 border border-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-foreground"
+                className="w-full h-9 px-3 text-sm bg-[var(--accent-light)] border border-[var(--border)] rounded-sm outline-none text-[var(--text-primary)]"
               >
                 <option value="beginner">초급</option>
                 <option value="intermediate">중급</option>
@@ -502,32 +498,54 @@ function EditorModal({
             </div>
           </div>
 
+          <input
+            type="text"
+            value={tagsInput}
+            onChange={(e) => setTagsInput(e.target.value)}
+            placeholder="태그를 쉼표로 구분하여 입력하세요"
+            className="w-full h-9 px-3 text-sm bg-[var(--accent-light)] border border-[var(--border)] rounded-sm outline-none focus:border-[var(--text-muted)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+          />
+
           <div>
-            <label className="block text-sm font-medium text-foreground/70 mb-1">
-              태그 (쉼표로 구분)
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5 uppercase tracking-wider">
+              본문
             </label>
-            <input
-              type="text"
-              value={tagsInput}
-              onChange={(e) => setTagsInput(e.target.value)}
-              placeholder="JavaScript, React, TypeScript"
-              className="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-white/5 border border-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-foreground placeholder:text-foreground/40"
-            />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-[10px] text-[var(--text-muted)] mb-1 uppercase">Editor</p>
+                <MarkdownEditor
+                  value={content}
+                  onChange={setContent}
+                  placeholder="마크다운으로 작성하세요"
+                />
+              </div>
+              <div>
+                <p className="text-[10px] text-[var(--text-muted)] mb-1 uppercase">Preview</p>
+                <div className="rounded-sm border border-[var(--border)] p-4 min-h-[300px] max-h-[500px] overflow-y-auto bg-[var(--accent-light)]">
+                  {content ? (
+                    <MarkdownPreview content={content} />
+                  ) : (
+                    <p className="text-sm text-[var(--text-muted)]">미리보기</p>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 mt-6">
+        {/* Footer */}
+        <div className="flex justify-end gap-2 px-6 py-4 border-t border-[var(--border)]">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl border border-white/20 text-foreground/70 hover:bg-white/10 transition-colors"
+            className="h-9 px-5 text-sm border border-[var(--border)] rounded-sm hover:bg-[var(--accent-light)] transition-colors"
           >
             취소
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 rounded-xl bg-indigo-500 text-white font-medium hover:bg-indigo-600 transition-colors"
+            className="h-9 px-5 text-sm font-medium bg-[var(--accent)] text-[var(--card-bg)] rounded-sm hover:opacity-90 transition-opacity"
           >
-            {item ? "수정 완료" : "추가 완료"}
+            {item ? "수정" : "발행"}
           </button>
         </div>
       </div>
