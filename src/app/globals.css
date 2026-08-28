@@ -7,43 +7,45 @@
   --color-foreground: var(--foreground);
 }
 
-:root {
-  --background: #e8eaf0;
-  --foreground: #1a1a2e;
-  --glass-bg: rgba(255, 255, 255, 0.45);
-  --glass-bg-strong: rgba(255, 255, 255, 0.65);
-  --glass-border: rgba(255, 255, 255, 0.35);
-  --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.12);
-  --glass-blur: 16px;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0f0f23;
-    --foreground: #e0e0e0;
-    --glass-bg: rgba(20, 20, 45, 0.55);
-    --glass-bg-strong: rgba(25, 25, 55, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.08);
-    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
-    --glass-blur: 20px;
+    --background: #e8eaf0;
+    --foreground: #1a1a2e;
+    --glass-bg: rgba(255, 255, 255, 0.45);
+    --glass-bg-strong: rgba(255, 255, 255, 0.65);
+    --glass-border: rgba(255, 255, 255, 0.35);
+    --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.12);
+    --glass-blur: 16px;
   }
-}
 
-* {
-  box-sizing: border-box;
-}
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: #0f0f23;
+      --foreground: #e0e0e0;
+      --glass-bg: rgba(20, 20, 45, 0.55);
+      --glass-bg-strong: rgba(25, 25, 55, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+      --glass-blur: 20px;
+    }
+  }
 
-body {
-  min-height: 100vh;
-  background: var(--background);
-  background-image:
-    radial-gradient(ellipse at 15% 10%, rgba(99, 102, 241, 0.18) 0%, transparent 55%),
-    radial-gradient(ellipse at 85% 85%, rgba(168, 85, 247, 0.18) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 50%, rgba(236, 72, 153, 0.08) 0%, transparent 60%);
-  background-attachment: fixed;
-  color: var(--foreground);
-  font-family: var(--font-pretendard);
-  -webkit-font-smoothing: antialiased;
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    min-height: 100vh;
+    background: var(--background);
+    background-image:
+      radial-gradient(ellipse at 15% 10%, rgba(99, 102, 241, 0.18) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 85%, rgba(168, 85, 247, 0.18) 0%, transparent 55%),
+      radial-gradient(ellipse at 50% 50%, rgba(236, 72, 153, 0.08) 0%, transparent 60%);
+    background-attachment: fixed;
+    color: var(--foreground);
+    font-family: var(--font-pretendard);
+    -webkit-font-smoothing: antialiased;
+  }
 }
 
 /* ===== Glass Panels ===== */
