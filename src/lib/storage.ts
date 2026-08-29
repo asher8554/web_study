@@ -1,6 +1,12 @@
 import { KnowledgeItem, KnowledgeStore } from "@/types/knowledge";
+import {
+  isGitHubConfigured,
+  fetchFromGitHub,
+  commitToGitHub,
+} from "./github";
 
 const STORAGE_KEY = "knowledge-log";
+const SYNC_LOCK_KEY = "knowledge-sync-lock";
 
 function isClient(): boolean {
   return typeof window !== "undefined";
@@ -23,6 +29,80 @@ export function saveStore(store: KnowledgeStore): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
 }
 
+function acquireSyncLock(): boolean {
+  if (!isClient()) return false;
+  const lock = sessionStorage.getItem(SYNC_LOCK_KEY);
+  if (lock) return false;
+  sessionStorage.setItem(SYNC_LOCK_KEY, "1");
+  return true;
+}
+
+function releaseSyncLock(): void {
+  sessionStorage.removeItem(SYNC_LOCK_KEY);
+}
+
+export async function syncFromGitHub(): Promise<boolean> {
+  if (!isGitHubConfigured()) return false;
+  if (!acquireSyncLock()) return false;
+
+  try {
+    const remote = await fetchFromGitHub();
+    if (!remote) return false;
+
+    const local = getStore();
+
+    const merged = mergeStores(local, remote);
+    saveStore(merged);
+    return true;
+  } finally {
+    releaseSyncLock();
+  }
+}
+
+export async function syncToGitHub(): Promise<boolean> {
+  if (!isGitHubConfigured()) return false;
+
+  try {
+    const store = getStore();
+    return await commitToGitHub(store);
+  } catch {
+    return false;
+  }
+}
+
+async function syncToGitHubBackground(): Promise<void> {
+  if (!isGitHubConfigured()) return;
+  if (!acquireSyncLock()) return;
+
+  try {
+    const store = getStore();
+    await commitToGitHub(store);
+  } finally {
+    releaseSyncLock();
+  }
+}
+
+function mergeStores(local: KnowledgeStore, remote: KnowledgeStore): KnowledgeStore {
+  const map = new Map<string, KnowledgeItem>();
+
+  for (const item of remote.items) {
+    map.set(item.id, item);
+  }
+
+  for (const item of local.items) {
+    const existing = map.get(item.id);
+    if (!existing || new Date(item.updatedAt) > new Date(existing.updatedAt)) {
+      map.set(item.id, item);
+    }
+  }
+
+  const items = Array.from(map.values()).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  return { items };
+}
+
 export function getAllItems(): KnowledgeItem[] {
   return getStore().items;
 }
@@ -43,6 +123,7 @@ export function createItem(
   };
   store.items.unshift(newItem);
   saveStore(store);
+  syncToGitHubBackground();
   return newItem;
 }
 
@@ -60,6 +141,7 @@ export function updateItem(
     updatedAt: new Date().toISOString(),
   };
   saveStore(store);
+  syncToGitHubBackground();
   return store.items[index];
 }
 
@@ -70,6 +152,7 @@ export function deleteItem(id: string): boolean {
 
   store.items.splice(index, 1);
   saveStore(store);
+  syncToGitHubBackground();
   return true;
 }
 
@@ -101,6 +184,7 @@ export function importFromJSON(jsonString: string): boolean {
     const data = JSON.parse(jsonString) as KnowledgeStore;
     if (!Array.isArray(data.items)) return false;
     saveStore(data);
+    syncToGitHubBackground();
     return true;
   } catch {
     return false;

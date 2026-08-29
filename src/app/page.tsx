@@ -11,7 +11,17 @@ import {
   getAllTags,
   exportToJSON,
   importFromJSON,
+  syncFromGitHub,
+  syncToGitHub,
 } from "@/lib/storage";
+import {
+  getGitHubConfig,
+  setGitHubConfig,
+  clearGitHubConfig,
+  isGitHubConfigured,
+  testGitHubConnection,
+  GitHubConfig,
+} from "@/lib/github";
 import MarkdownEditor from "@/components/MarkdownEditor";
 import MarkdownPreview from "@/components/MarkdownPreview";
 
@@ -22,9 +32,22 @@ export default function Home() {
   const [showEditor, setShowEditor] = useState(false);
   const [editingItem, setEditingItem] = useState<KnowledgeItem | null>(null);
   const [showDetail, setShowDetail] = useState<KnowledgeItem | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [githubConnected, setGithubConnected] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<string>("");
 
   useEffect(() => {
     setItems(getAllItems());
+    setGithubConnected(isGitHubConfigured());
+
+    if (isGitHubConfigured()) {
+      setSyncStatus("동기화 중...");
+      syncFromGitHub().then((ok) => {
+        setItems(getAllItems());
+        setSyncStatus(ok ? "동기화 완료" : "동기화 실패");
+        setTimeout(() => setSyncStatus(""), 3000);
+      });
+    }
   }, []);
 
   const tags = useMemo(() => getAllTags(), [items]);
@@ -100,6 +123,14 @@ export default function Home() {
     input.click();
   };
 
+  const handleManualSync = async () => {
+    setSyncStatus("동기화 중...");
+    const ok = await syncFromGitHub();
+    setItems(getAllItems());
+    setSyncStatus(ok ? "동기화 완료" : "동기화 실패");
+    setTimeout(() => setSyncStatus(""), 3000);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
@@ -121,7 +152,7 @@ export default function Home() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="input-glass pl-10"
               />
-              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground)] opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
@@ -139,7 +170,7 @@ export default function Home() {
           <div className="glass-card p-5 space-y-6 sticky top-24">
             {/* Stats */}
             <div>
-              <h3 className="text-xs font-semibold text-[var(--foreground)] opacity-40 uppercase tracking-wider mb-3">
+              <h3 className="text-xs font-semibold opacity-40 uppercase tracking-wider mb-3">
                 통계
               </h3>
               <div className="space-y-2 text-sm">
@@ -158,7 +189,7 @@ export default function Home() {
 
             {/* Tags */}
             <div>
-              <h3 className="text-xs font-semibold text-[var(--foreground)] opacity-40 uppercase tracking-wider mb-3">
+              <h3 className="text-xs font-semibold opacity-40 uppercase tracking-wider mb-3">
                 태그
               </h3>
               {tags.length > 0 ? (
@@ -178,9 +209,45 @@ export default function Home() {
               )}
             </div>
 
+            {/* GitHub Sync */}
+            <div>
+              <h3 className="text-xs font-semibold opacity-40 uppercase tracking-wider mb-3">
+                GitHub 연동
+              </h3>
+              {githubConnected ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                    <span className="opacity-60">연결됨</span>
+                  </div>
+                  {syncStatus && (
+                    <p className="text-xs opacity-50">{syncStatus}</p>
+                  )}
+                  <div className="flex gap-1.5">
+                    <button onClick={handleManualSync} className="btn-ghost text-xs flex-1">
+                      동기화
+                    </button>
+                    <button
+                      onClick={() => setShowSettings(true)}
+                      className="btn-ghost text-xs flex-1"
+                    >
+                      설정
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowSettings(true)}
+                  className="btn-ghost text-xs w-full"
+                >
+                  GitHub 연결 설정
+                </button>
+              )}
+            </div>
+
             {/* Backup / Restore */}
             <div>
-              <h3 className="text-xs font-semibold text-[var(--foreground)] opacity-40 uppercase tracking-wider mb-3">
+              <h3 className="text-xs font-semibold opacity-40 uppercase tracking-wider mb-3">
                 데이터
               </h3>
               <div className="flex gap-2">
@@ -274,6 +341,18 @@ export default function Home() {
           onSave={() => {
             setItems(getAllItems());
             setShowEditor(false);
+          }}
+        />
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <SettingsModal
+          onClose={() => setShowSettings(false)}
+          onSaved={() => {
+            setGithubConnected(isGitHubConfigured());
+            setShowSettings(false);
+            handleManualSync();
           }}
         />
       )}
@@ -407,7 +486,6 @@ function EditorModal({
       style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }}
     >
       <div className="w-full max-w-4xl glass-strong rounded-2xl mb-20">
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--glass-border)]">
           <h2 className="text-lg font-semibold">
             {item ? "글 수정" : "새 글쓰기"}
@@ -419,7 +497,6 @@ function EditorModal({
           </button>
         </div>
 
-        {/* Body */}
         <div className="p-6 space-y-5">
           <input
             type="text"
@@ -503,7 +580,6 @@ function EditorModal({
           </div>
         </div>
 
-        {/* Footer */}
         <div className="flex justify-end gap-2 px-6 py-4 border-t border-[var(--glass-border)]">
           <button onClick={onClose} className="btn-ghost">
             취소
@@ -511,6 +587,153 @@ function EditorModal({
           <button onClick={handleSave} className="btn-primary">
             {item ? "수정" : "발행"}
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===== Settings Modal ===== */
+function SettingsModal({
+  onClose,
+  onSaved,
+}: {
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const existing = getGitHubConfig();
+  const [token, setToken] = useState(existing?.token || "");
+  const [owner, setOwner] = useState(existing?.owner || "");
+  const [repo, setRepo] = useState(existing?.repo || "");
+  const [filePath, setFilePath] = useState(existing?.filePath || "data/items.json");
+  const [testResult, setTestResult] = useState<string>("");
+  const [testing, setTesting] = useState(false);
+
+  const handleTest = async () => {
+    setTesting(true);
+    setTestResult("");
+    setGitHubConfig({ token, owner, repo, filePath });
+    const result = await testGitHubConnection();
+    setTestResult(result.message);
+    setTesting(false);
+  };
+
+  const handleSave = () => {
+    if (!token || !owner || !repo) {
+      alert("모든 필드를 입력해주세요");
+      return;
+    }
+    setGitHubConfig({ token, owner, repo, filePath });
+    onSaved();
+  };
+
+  const handleDisconnect = () => {
+    clearGitHubConfig();
+    onSaved();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }}
+    >
+      <div className="w-full max-w-lg glass-strong rounded-2xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--glass-border)]">
+          <h2 className="text-lg font-semibold">GitHub 연동 설정</h2>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-[var(--glass-bg)] transition-colors">
+            <svg className="w-5 h-5 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <p className="text-xs opacity-50 leading-relaxed">
+            GitHub Personal Access Token (repo scope)이 필요합니다.
+            <br />
+            <a
+              href="https://github.com/settings/tokens/new?scopes=repo&description=knowledge-log"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-indigo-400 hover:underline"
+            >
+              토큰 발급 받기 →
+            </a>
+          </p>
+
+          <div>
+            <label className="block text-xs font-semibold opacity-40 uppercase tracking-wider mb-1.5">
+              Personal Access Token
+            </label>
+            <input
+              type="password"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              placeholder="ghp_xxxxxxxxxxxx"
+              className="input-glass"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold opacity-40 uppercase tracking-wider mb-1.5">
+                레포 소유자
+              </label>
+              <input
+                type="text"
+                value={owner}
+                onChange={(e) => setOwner(e.target.value)}
+                placeholder="asher8554"
+                className="input-glass"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold opacity-40 uppercase tracking-wider mb-1.5">
+                레포 이름
+              </label>
+              <input
+                type="text"
+                value={repo}
+                onChange={(e) => setRepo(e.target.value)}
+                placeholder="web_study"
+                className="input-glass"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold opacity-40 uppercase tracking-wider mb-1.5">
+              저장 경로
+            </label>
+            <input
+              type="text"
+              value={filePath}
+              onChange={(e) => setFilePath(e.target.value)}
+              placeholder="data/items.json"
+              className="input-glass"
+            />
+          </div>
+
+          {testResult && (
+            <p className="text-xs opacity-60">{testResult}</p>
+          )}
+        </div>
+
+        <div className="flex justify-between px-6 py-4 border-t border-[var(--glass-border)]">
+          {existing ? (
+            <button onClick={handleDisconnect} className="btn-ghost text-red-500 text-sm">
+              연동 해제
+            </button>
+          ) : (
+            <div />
+          )}
+          <div className="flex gap-2">
+            <button onClick={handleTest} disabled={testing} className="btn-ghost text-sm">
+              {testing ? "테스트 중..." : "연결 테스트"}
+            </button>
+            <button onClick={handleSave} className="btn-primary text-sm">
+              저장
+            </button>
+          </div>
         </div>
       </div>
     </div>
