@@ -1,4 +1,4 @@
-import { KnowledgeItem, KnowledgeStore } from "@/types/knowledge";
+import { KnowledgeItem, KnowledgeStore, KnowledgeStoreSchema } from "@/types/knowledge";
 import {
   isGitHubConfigured,
   fetchFromGitHub,
@@ -181,9 +181,13 @@ export function exportToJSON(): string {
 
 export function importFromJSON(jsonString: string): boolean {
   try {
-    const data = JSON.parse(jsonString) as KnowledgeStore;
-    if (!Array.isArray(data.items)) return false;
-    saveStore(data);
+    const data = JSON.parse(jsonString);
+    const result = KnowledgeStoreSchema.safeParse(data);
+    if (!result.success) {
+      console.error("JSON validation failed:", result.error.flatten());
+      return false;
+    }
+    saveStore(result.data);
     syncToGitHubBackground();
     return true;
   } catch {

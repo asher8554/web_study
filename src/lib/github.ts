@@ -12,7 +12,7 @@ export interface GitHubConfig {
 export function getGitHubConfig(): GitHubConfig | null {
   if (typeof window === "undefined") return null;
   try {
-    const data = localStorage.getItem(CONFIG_KEY);
+    const data = sessionStorage.getItem(CONFIG_KEY);
     if (!data) return null;
     return JSON.parse(data) as GitHubConfig;
   } catch {
@@ -21,11 +21,11 @@ export function getGitHubConfig(): GitHubConfig | null {
 }
 
 export function setGitHubConfig(config: GitHubConfig): void {
-  localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+  sessionStorage.setItem(CONFIG_KEY, JSON.stringify(config));
 }
 
 export function clearGitHubConfig(): void {
-  localStorage.removeItem(CONFIG_KEY);
+  sessionStorage.removeItem(CONFIG_KEY);
 }
 
 export function isGitHubConfigured(): boolean {

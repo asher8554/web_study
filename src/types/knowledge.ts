@@ -1,17 +1,22 @@
-export type Difficulty = "beginner" | "intermediate" | "advanced";
+import { z } from "zod";
 
-export interface KnowledgeItem {
-  id: string;
-  title: string;
-  content: string;
-  summary: string;
-  source: string;
-  difficulty: Difficulty;
-  tags: string[];
-  createdAt: string;
-  updatedAt: string;
-}
+export const DifficultySchema = z.enum(["beginner", "intermediate", "advanced"]);
+export type Difficulty = z.infer<typeof DifficultySchema>;
 
-export interface KnowledgeStore {
-  items: KnowledgeItem[];
-}
+export const KnowledgeItemSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string().min(1).max(500),
+  content: z.string(),
+  summary: z.string().max(1000),
+  source: z.string().max(2000),
+  difficulty: DifficultySchema,
+  tags: z.array(z.string().max(100)).max(20),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+export type KnowledgeItem = z.infer<typeof KnowledgeItemSchema>;
+
+export const KnowledgeStoreSchema = z.object({
+  items: z.array(KnowledgeItemSchema),
+});
+export type KnowledgeStore = z.infer<typeof KnowledgeStoreSchema>;

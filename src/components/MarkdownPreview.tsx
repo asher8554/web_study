@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import katex from "katex";
+import DOMPurify from "dompurify";
 
 interface MarkdownPreviewProps {
   content: string;
@@ -32,6 +33,14 @@ function renderKaTeX(text: string): string {
   return result;
 }
 
+function sanitizeUrl(url: string): string {
+  const trimmed = url.trim();
+  if (/^javascript:/i.test(trimmed) || /^data:/i.test(trimmed)) {
+    return "#";
+  }
+  return trimmed;
+}
+
 function parseMarkdown(text: string): string {
   let html = text;
 
@@ -45,7 +54,8 @@ function parseMarkdown(text: string): string {
   // Inline code
   html = html.replace(
     /`([^`]+)`/g,
-    '<code class="bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded text-sm font-mono">$1</code>'
+    (_: string, code: string) =>
+      `<code class="bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded text-sm font-mono">${escapeHtml(code)}</code>`
   );
 
   // Headers
@@ -70,13 +80,15 @@ function parseMarkdown(text: string): string {
   // Links
   html = html.replace(
     /\[([^\]]+)\]\(([^)]+)\)/g,
-    '<a href="$2" class="text-indigo-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>'
+    (_: string, text: string, url: string) =>
+      `<a href="${sanitizeUrl(url)}" class="text-indigo-500 hover:underline" target="_blank" rel="noopener noreferrer">${text}</a>`
   );
 
   // Images
   html = html.replace(
     /!\[([^\]]*)\]\(([^)]+)\)/g,
-    '<img src="$2" alt="$1" class="max-w-full rounded-lg my-4" />'
+    (_: string, alt: string, url: string) =>
+      `<img src="${sanitizeUrl(url)}" alt="${alt}" class="max-w-full rounded-lg my-4" />`
   );
 
   // Unordered lists
@@ -109,6 +121,17 @@ function parseMarkdown(text: string): string {
 
   // Apply KaTeX
   html = renderKaTeX(html);
+
+  // Sanitize with DOMPurify
+  html = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [
+      "p", "br", "strong", "em", "a", "img", "h1", "h2", "h3",
+      "pre", "code", "blockquote", "hr", "li", "ul", "ol",
+    ],
+    ALLOWED_ATTR: [
+      "class", "href", "src", "alt", "target", "rel",
+    ],
+  });
 
   return html;
 }
