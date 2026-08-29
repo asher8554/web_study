@@ -224,12 +224,12 @@ export default function Home() {
                     <p className="text-xs opacity-50">{syncStatus}</p>
                   )}
                   <div className="flex gap-1.5">
-                    <button onClick={handleManualSync} className="btn-ghost text-xs flex-1">
+                    <button onClick={handleManualSync} className="btn-ghost text-xs flex-1 whitespace-nowrap">
                       동기화
                     </button>
                     <button
                       onClick={() => setShowSettings(true)}
-                      className="btn-ghost text-xs flex-1"
+                      className="btn-ghost text-xs flex-1 whitespace-nowrap"
                     >
                       설정
                     </button>
